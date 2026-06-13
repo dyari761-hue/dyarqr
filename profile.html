@@ -74,16 +74,9 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
-        /* ڕەنگی دوگمەکان */
         .insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
         .snap { background: #FFFC00; color: #000; }
         .tiktok { background: #010101; }
-        
-        .error-msg {
-            color: #e53e3e;
-            font-size: 16px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -94,12 +87,11 @@
     </div>
     <h1 id="name">بارگەیەک...</h1>
     
-    <div class="links-container" id="links">
-        </div>
+    <div class="links-container" id="links"></div>
 </div>
 
 <script>
-    // لێرە کۆدی Firebase Config ی خۆت دابنێ
+    // لێرە کلیلەکانی فایەربەیسی خۆت دابنێ (زۆر گرنگە)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_AUTH_DOMAIN",
@@ -120,32 +112,30 @@
             if (doc.exists) {
                 const data = doc.data();
                 
-                // پشکنینی ئەوەی ئایا ئەکاونتەکە چالاکە؟
-                if (data.status === "active") {
-                    document.getElementById("name").innerText = data.name;
-                    let linksDiv = document.getElementById("links");
-                    
-                    if(data.instagram) {
-                        linksDiv.innerHTML += `<a class="btn insta" href="https://instagram.com/${data.instagram}" target="_blank"><i class="fa-brands fa-instagram fa-lg"></i> Instagram</a>`;
-                    }
-                    if(data.snapchat) {
-                        linksDiv.innerHTML += `<a class="btn snap" href="https://snapchat.com/add/${data.snapchat}" target="_blank"><i class="fa-brands fa-snapchat fa-lg"></i> Snapchat</a>`;
-                    }
-                    if(data.tiktok) {
-                        linksDiv.innerHTML += `<a class="btn tiktok" href="https://tiktok.com/@${data.tiktok}" target="_blank"><i class="fa-brands fa-tiktok fa-lg"></i> TikTok</a>`;
-                    }
-                } else {
-                    document.getElementById("name").innerText = "ئەم پرۆفایلە ڕاگیراوە";
-                    document.getElementById("links").innerHTML = "<p class='error-msg'>پرۆفایلەکە هێشتا چالاک نییە.</p>";
+                // پیشاندانی ناوەکە
+                document.getElementById("name").innerText = data.name || "بێ ناو";
+                let linksDiv = document.getElementById("links");
+                linksDiv.innerHTML = ""; // پاککردنەوەی ناوەڕۆکە کۆنەکە
+                
+                // دروستکردنی دوگمەکان ئەگەر داتایان تێدابێت
+                if(data.instagram) {
+                    linksDiv.innerHTML += `<a class="btn insta" href="https://instagram.com/${data.instagram}" target="_blank"><i class="fa-brands fa-instagram fa-lg"></i> Instagram</a>`;
+                }
+                if(data.snapchat) {
+                    linksDiv.innerHTML += `<a class="btn snap" href="https://snapchat.com/add/${data.snapchat}" target="_blank"><i class="fa-brands fa-snapchat fa-lg"></i> Snapchat</a>`;
+                }
+                if(data.tiktok) {
+                    linksDiv.innerHTML += `<a class="btn tiktok" href="https://tiktok.com/@${data.tiktok}" target="_blank"><i class="fa-brands fa-tiktok fa-lg"></i> TikTok</a>`;
                 }
             } else {
                 document.getElementById("name").innerText = "پرۆفایل نەدۆزرایەوە";
             }
         }).catch((error) => {
-            console.error("کێشە لە خوێندنەوەی داتابەیس:", error);
+            document.getElementById("name").innerText = "هەڵە لە پەیوەندی داتابەیس";
+            console.error(error);
         });
     } else {
-        document.getElementById("name").innerText = "لینکەکە دروست نییە!";
+        document.getElementById("name").innerText = "لینکەکە کێشەی تێدایە";
     }
 </script>
 </body>
