@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرۆفایلی سۆشیاڵ میدیا</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .profile-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .avatar {
+            width: 90px;
+            height: 90px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: #764ba2;
+            border: 4px solid #f1f5f9;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1a202c;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px;
+            color: white;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        /* ڕەنگی دوگمەکان */
+        .insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .snap { background: #FFFC00; color: #000; }
+        .tiktok { background: #010101; }
+        
+        .error-msg {
+            color: #e53e3e;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-card">
+    <div class="avatar">
+        <i class="fa-solid fa-user"></i>
+    </div>
+    <h1 id="name">بارگەیەک...</h1>
+    
+    <div class="links-container" id="links">
+        </div>
+</div>
+
+<script>
+    // لێرە کۆدی Firebase Config ی خۆت دابنێ
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // وەرگرتنی ناسنامە (ID) لە لینکەکەوە
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+
+    if (userId) {
+        db.collection("users").doc(userId).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                
+                // پشکنینی ئەوەی ئایا ئەکاونتەکە چالاکە؟
+                if (data.status === "active") {
+                    document.getElementById("name").innerText = data.name;
+                    let linksDiv = document.getElementById("links");
+                    
+                    if(data.instagram) {
+                        linksDiv.innerHTML += `<a class="btn insta" href="https://instagram.com/${data.instagram}" target="_blank"><i class="fa-brands fa-instagram fa-lg"></i> Instagram</a>`;
+                    }
+                    if(data.snapchat) {
+                        linksDiv.innerHTML += `<a class="btn snap" href="https://snapchat.com/add/${data.snapchat}" target="_blank"><i class="fa-brands fa-snapchat fa-lg"></i> Snapchat</a>`;
+                    }
+                    if(data.tiktok) {
+                        linksDiv.innerHTML += `<a class="btn tiktok" href="https://tiktok.com/@${data.tiktok}" target="_blank"><i class="fa-brands fa-tiktok fa-lg"></i> TikTok</a>`;
+                    }
+                } else {
+                    document.getElementById("name").innerText = "ئەم پرۆفایلە ڕاگیراوە";
+                    document.getElementById("links").innerHTML = "<p class='error-msg'>پرۆفایلەکە هێشتا چالاک نییە.</p>";
+                }
+            } else {
+                document.getElementById("name").innerText = "پرۆفایل نەدۆزرایەوە";
+            }
+        }).catch((error) => {
+            console.error("کێشە لە خوێندنەوەی داتابەیس:", error);
+        });
+    } else {
+        document.getElementById("name").innerText = "لینکەکە دروست نییە!";
+    }
+</script>
+</body>
+</html>

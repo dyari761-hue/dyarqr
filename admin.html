@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دروستکردنی QR کۆدی سۆشیاڵ میدیا بە خۆڕایی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .container {
+            background: white; padding: 30px; border-radius: 24px; width: 100%; max-width: 450px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center;
+        }
+        h2 { margin-bottom: 10px; color: #1e3c72; font-size: 22px; }
+        p { font-size: 14px; color: #666; margin-bottom: 20px; }
+        .input-group { position: relative; margin-bottom: 15px; }
+        .input-group i { position: absolute; right: 15px; top: 12px; color: #aaa; font-size: 18px; }
+        input { width: 100%; padding: 12px 45px 12px 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #2a5298; box-shadow: 0 0 5px rgba(42,82,152,0.3); }
+        
+        button { background: #2ecc71; color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #27ae60; }
+        
+        /* بەشی پیشاندانی QR */
+        #resultSection { margin-top: 25px; display: none; flex-direction: column; align-items: center; background: #f9f9f9; padding: 20px; border-radius: 16px; border: 2px dashed #ddd; }
+        #qrImage { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        #downloadBtn { margin-top: 15px; background: #3498db; }
+        #downloadBtn:hover { background: #2980b9; }
+        .profile-link { margin-top: 10px; font-size: 13px; color: #2a5298; text-decoration: none; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>پەیج و QR کۆدەکەت بە خۆڕایی دروستبکە</h2>
+    <p>زانیارییەکانت داخل بکە و یەکسەر کۆدەکەت وەربگرەوە</p>
+    
+    <div class="input-group">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="custName" placeholder="ناوی تەواوت یان ناوی براندەکەت">
+    </div>
+    <div class="input-group">
+        <i class="fa-brands fa-instagram" style="color: #e1306c;"></i>
+        <input type="text" id="insta" placeholder="یووزەرنەیمی ئینستاگرام (بێ @)">
+    </div>
+    <div class="input-group">
+        <i class="fa-brands fa-snapchat" style="color: #fffc00; background: black; border-radius: 4px; padding: 1px;"></i>
+        <input type="text" id="snap" placeholder="یووزەرنەیمی سناپچات">
+    </div>
+    <div class="input-group">
+        <i class="fa-brands fa-tiktok" style="color: #000;"></i>
+        <input type="text" id="tiktok" placeholder="یووزەرنەیمی تیکتۆک">
+    </div>
+    
+    <button onclick="generateFreeQR()">دروستکردنی لاپەڕە و QR</button>
+    
+    <div id="resultSection">
+        <div id="qrImage"></div>
+        <button id="downloadBtn" onclick="downloadQR()">داگرتنی وێنەی QR</button>
+        <a id="profileUrlText" class="profile-link" href="#" target="_blank">سەیرکردنی لاپەڕەکەم</a>
+    </div>
+</div>
+
+<script>
+    // کلیلەکانی فایەربەیسی خۆت
+    const firebaseConfig = {
+        apiKey: "AIzaSyAhUER-M2lvNJuQRDod6fBnfIw6Zu-g4Z8",
+        authDomain: "myqrproject-2914f.firebaseapp.com",
+        projectId: "myqrproject-2914f",
+        storageBucket: "myqrproject-2914f.firebasestorage.app",
+        messagingSenderId: "617604797390",
+        appId: "1:617604797390:web:fb3b09937693c5d16e919f",
+        measurementId: "G-09DCDCDVS6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function generateFreeQR() {
+        const name = document.getElementById("custName").value.trim();
+        const instagram = document.getElementById("insta").value.trim();
+        const snapchat = document.getElementById("snap").value.trim();
+        const tiktok = document.getElementById("tiktok").value.trim();
+
+        if(!name) { alert("تکایە ناوێک بنووسە"); return; }
+
+        // پاشەکەوتکردن لە داتابەیس بە شێوەی ئۆتۆماتیکی چالاک
+        db.collection("users").add({
+            name: name,
+            instagram: instagram,
+            snapchat: snapchat,
+            tiktok: tiktok,
+            status: "active" 
+        }).then((docRef) => {
+            document.getElementById("qrImage").innerHTML = "";
+            
+            // کاتێک سایتەکەت بڵاو دەکەیتەوە، لێرەدا دەبێت ناونیشانی فایلی profile.html دابنێیت.
+            // بۆ ئێستا لەسەر کۆمپیوتەرەکەت بەم شێوەیە کار دەکات ئەگەر هەردووکیان لە یەک فۆڵدەربن:
+            let profileUrl = window.location.href.replace("index.html", "") + `profile.html?id=${docRef.id}`;
+            
+            // دروستکردنی QR
+            new QRCode(document.getElementById("qrImage"), {
+                text: profileUrl,
+                width: 200,
+                height: 200
+            });
+            
+            // پیشاندانی بەستەرەکە بە نووسین
+            const linkTag = document.getElementById("profileUrlText");
+            linkTag.href = profileUrl;
+            linkTag.innerText = "لینکەکەت: " + profileUrl;
+            
+            // پیشاندانی بەشی ئەنجام
+            document.getElementById("resultSection").style.display = "flex";
+            alert("پەیج و QR کۆدەکەت بە سەرکەوتوویی دروستکرا! 🎉");
+        }).catch((err) => {
+            alert("کێشەیەک ڕوویدا، تکایە دووبارە تاقی بکەرەوە.");
+            console.error(err);
+        });
+    }
+
+    function downloadQR() {
+        const qrImg = document.querySelector("#qrImage img");
+        if (qrImg) {
+            const link = document.createElement("a");
+            link.href = qrImg.src;
+            link.download = `My_QR_Code.png`;
+            link.click();
+        } else {
+            alert("کێشەیەک هەیە، دەتوانیت بە مۆبایلەکەت سکرینشۆتی بکەیت.");
+        }
+    }
+</script>
+</body>
+</html>
